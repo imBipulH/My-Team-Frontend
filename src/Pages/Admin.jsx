@@ -10,9 +10,7 @@ const AdminDashboard = () => {
     role: '',
     image: null
   })
-  const [galleryImage, setGalleryImage] = useState(null)
-  //   const [players, setPlayers] = useState([])
-  //   const [gallery, setGallery] = useState([])
+  const [galleryImage, setGalleryImage] = useState([])
 
   // Handle banner upload
   const handleBannerUpload = async e => {
@@ -23,7 +21,13 @@ const AdminDashboard = () => {
     try {
       const response = await axios.post(
         'http://localhost:4000/admin/upload-banner',
-        formData
+        formData,
+        {
+          headers: {
+            'content-type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
+          }
+        }
       )
       setBanner(null)
       alert(response.data.message)
@@ -63,12 +67,21 @@ const AdminDashboard = () => {
   const handleGalleryUpload = async e => {
     e.preventDefault()
     const formData = new FormData()
-    formData.append('image', galleryImage)
+
+    for (let i = 0; i < galleryImage.length; i++) {
+      formData.append('image', galleryImage[i])
+    }
 
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/admin/gallery',
-        formData
+        'http://localhost:4000/admin/gallery',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}` // Pass token if needed
+          }
+        }
       )
       alert(response.data.message)
     } catch (error) {
@@ -84,7 +97,13 @@ const AdminDashboard = () => {
   return (
     <div className='p-8 relative'>
       <h1 className='text-3xl font-bold text-center mb-6'>Admin Dashboard</h1>
-      <div className='flex justify-end absolute bottom-2 right-4 '>
+      <div className='flex justify-end absolute bottom-2 right-4 gap-4'>
+        <button
+          onClick={() => navigate('/')}
+          className='bg-green-100 py-2 px-3 hover:bg-green-300 rounded-md'
+        >
+          Home
+        </button>
         <button
           onClick={handleSignOut}
           className='bg-gray-100 py-2 px-3 hover:bg-red-300 rounded-md '
@@ -156,7 +175,8 @@ const AdminDashboard = () => {
         <form onSubmit={handleGalleryUpload}>
           <input
             type='file'
-            onChange={e => setGalleryImage(e.target.files[0])}
+            multiple
+            onChange={e => setGalleryImage(e.target.files)}
             required
           />
           <button
